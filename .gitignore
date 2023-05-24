@@ -2,3 +2,5 @@
 .env
 credentials.json
 token.json
+__pychache__/
+.python-version
