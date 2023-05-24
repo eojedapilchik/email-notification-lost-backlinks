@@ -8,7 +8,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from email.mime.text import MIMEText
-import time
 from datetime import datetime, timedelta
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.send']
@@ -43,6 +42,8 @@ def authenticate_google_account():
 
 
 def send_email(to, subject, message_text, at_record_id=None, sender=_sender):
+    if not message_text or not to or not subject:
+        raise ValueError("Cannot send email without message, to, and subject")
     service = authenticate_google_account()
     current_date = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     message = create_message(sender, to, subject, message_text)
@@ -53,11 +54,13 @@ def send_email(to, subject, message_text, at_record_id=None, sender=_sender):
     return message_sent['id']
 
 
-def create_message(sender, to, subject, message_text):
+def create_message(sender, to, cc, subject, message_text):
     message = MIMEText(message_text)
     message['to'] = to
     message['from'] = sender
     message['subject'] = subject
+    if cc:
+        message['cc'] = cc
     return {'raw': base64.urlsafe_b64encode(message.as_string().encode()).decode()}
 
 
