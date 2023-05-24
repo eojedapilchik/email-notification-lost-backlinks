@@ -18,23 +18,22 @@ def get_today_emails_to_send():
     emails = airtable_handler.get_records(filter_by_formula=" AND(OR( IS_BEFORE({Send Date}, TODAY()), "
                                                             "IS_SAME({Send Date}, TODAY())), {Status} = 'Scheduled')")
     if len(emails) > 0:
-        for email in emails:
-            at_email_id = email["id"]
-            fields = email.get("fields")
-            status = fields.get("fields").get("Status")
-            if fields and status == "Scheduled":
-                at_link_id = fields.get("Backlink")[0]
-                sequence = fields.get("Sequence")
-                to = fields.get("to")
-                body = fields.get("body")
-                subject = fields.get("subject")
-                cc = fields.get("cc")
-
-            print(email)
+        parse_emails(emails)
 
 
-def parse_email(email):
-    pass
+def parse_emails(emails):
+    for email in emails:
+        at_email_id = email["id"]
+        fields = email.get("fields")
+        status = fields.get("fields").get("Status")
+        if fields and status == "Scheduled":
+            at_record_id = fields.get("Backlink")[0]
+            sequence = fields.get("Sequence")
+            to = fields.get("to")
+            body = fields.get("body")
+            subject = fields.get("subject")
+            cc = fields.get("cc")
+            send_email(to,subject,body,at_record_id,cc)
 
 
 if __name__ == "__main__":

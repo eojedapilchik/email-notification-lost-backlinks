@@ -41,7 +41,7 @@ def authenticate_google_account():
     return service
 
 
-def send_email(to, subject, message_text, at_record_id=None, cc = None, sender=_sender):
+def send_email(to, subject, message_text, at_record_id=None, cc=None, sender=_sender):
     if not message_text or not to or not subject:
         raise ValueError("Cannot send email without message, to, and subject")
     service = authenticate_google_account()
