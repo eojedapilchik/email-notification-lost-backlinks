@@ -20,7 +20,7 @@ if(test){
 
 let startDate = getStartDate();
 //console.log(startDate)
-if(to && cc && record_id && partner_url && url){
+if(to && record_id && partner_url && url){
     for (let i = 0; i<3 ; i++){
         const template = await template_table.selectRecordAsync(list_of_active_templates[i])
         if(i === 0 ){
