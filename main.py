@@ -48,8 +48,8 @@ def parse_emails(emails):
 
 def update_airtable(emails_generated):
     airtable_records_to_update = []
+    airtable_handler = AirtableHandler(os.getenv("EMAIL_QUEUE_TABLE"))
     if len(emails_generated) > 0:
-        airtable_handler = AirtableHandler(os.getenv("EMAIL_QUEUE_TABLE"))
         for email in emails_generated:
             at_email_id = email["at_id"]
             fields = {
