@@ -42,7 +42,7 @@ def parse_emails(emails):
             emails_generated.append({"at_id": at_email_id, "google_email_id": email_sent["id"],
                                      "sequence": sequence, "at_link_id": at_record_id,
                                      "date_sent": email_sent["date"]})
-            time.sleep(10)
+            time.sleep(5)
     return emails_generated
 
 
