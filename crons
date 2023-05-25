@@ -1,0 +1,4 @@
+0 8 * * * cd /root/email-notifications && /usr/bin/python3 main.py >> /var/log/email-notifications/email-notifications.log 2>&1
+15 9 * * * cd /root/email-notifications && /usr/bin/python3 check_replies.py >> /var/log/email-notifications/check-replies.log 2>&1
+15 15 * * * cd /root/email-notifications && /usr/bin/python3 check_replies.py >> /var/log/email-notifications/check-replies.log 2>&1
+0 20 * * * cd /root/email-notifications && /usr/bin/python3 check_replies.py >> /var/log/email-notifications/check-replies.log 2>&1

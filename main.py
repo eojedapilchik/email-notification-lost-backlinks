@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime
 from helpers.gmail_handler import send_email
 from helpers.airtable_handler import AirtableHandler
@@ -57,6 +58,7 @@ def update_airtable(emails_generated):
                 "fldcj8lw0RIQhFuy5": email["date_sent"],  # Date Sent
             }
             airtable_records_to_update.append({"id": at_email_id, "fields": fields})
+            time.sleep(10)
     if len(airtable_records_to_update) > 0:
         airtable_handler.update_records(airtable_records_to_update)
         print(f"[!] {datetime.now().strftime('%d-%m-%y %H:%M:%S')} Emails sent: {len(airtable_records_to_update)}")
