@@ -1,4 +1,4 @@
-const test = true;
+const test = false;
 const inputConfig = input.config();
 const list_of_active_templates = inputConfig.list_of_active_templates;
 const template_table = base.getTable("tbltP7xF0hBCmjVyU")
@@ -12,8 +12,8 @@ const record_id = inputConfig.record_id;
 const contact_emails = inputConfig.contact_emails ?? '';
 let [to, cc] = splitEmails(contact_emails);
 if(test){
-    to = "eojedapilchik@gmail.com"
-    cc = "zetta.tecnologias@gmail.com"
+    to = "test@gmail.com"
+    cc = "test@resumedone.io"
 }
 //console.log(to, cc);
 
