@@ -176,6 +176,7 @@ def get_threads_with_replies(user_id="me"):
     service = authenticate_google_account()
     threads = list_threads_last_24_hours(user_id)
     threads_replied = []
+    skipped = 0
     for thread in threads:
         thread_data = get_thread(service, user_id, thread['id'])
         messages = thread_data['messages']
@@ -185,6 +186,11 @@ def get_threads_with_replies(user_id="me"):
             for msg in messages:
                 message = get_message(service, user_id, msg['id'])
                 for header in message['payload']['headers']:
+                    if header['name'] == 'From' and 'mailer-daemon@googlemail.com' in header['value']:
+                        print(f"Skipping a bounce notification.")
+                        skipped += 1
+                        found_reply = True
+                        break
                     if header['name'] == 'In-Reply-To':
                         # print(f'\n ** This email is a reply to: {header["value"]}\n')
                         threads_replied.append(thread['id'])
@@ -194,6 +200,7 @@ def get_threads_with_replies(user_id="me"):
                 if found_reply:
                     break
     print(f'Number of threads replied: {len(threads_replied)}')
+    print(f'Number of threads skipped: {skipped} - bounced emails')
     return threads_replied
 
 
