@@ -1,6 +1,6 @@
 .idea/
 .env
 credentials.json
-token.json
+helpers/token.json
 __pychache__/
 .python-version

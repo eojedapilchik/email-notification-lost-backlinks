@@ -46,3 +46,13 @@ class AirtableHandler:
         except Exception as e:
             print(e)
             raise e
+
+    def update_records(self, update_records: list, table_name: str = None):
+        update_table = self._table
+        if table_name:
+            update_table = Table(self._personal_access_token, self._base_key, table_name)
+        try:
+            update_table.batch_update(update_records)
+        except Exception as e:
+            print(e)
+            raise e

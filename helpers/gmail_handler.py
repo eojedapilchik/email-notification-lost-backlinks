@@ -13,25 +13,30 @@ from datetime import datetime, timedelta
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.send']
 
 _sender = os.getenv('GMAIL_SENDER')
+script_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.dirname(script_dir)
 
 
 def authenticate_google_account():
     service = None
     creds = None
-    if os.path.exists('../token.json'):
-        creds = Credentials.from_authorized_user_file('../token.json', SCOPES)
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
         # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
+            print('authenticate_google_account: No valid credentials found.')
+            credentials_path = os.path.join(parent_dir, 'credentials.json')
             flow = InstalledAppFlow.from_client_secrets_file(
-                '../credentials.json', SCOPES)
+                credentials_path,
+                SCOPES)
             creds = flow.run_local_server(port=0)
             print(f"A new window to authorize app is required. Please check your browser.")
 
         # Save the credentials for the next run
-        with open('../token.json', 'w') as token:
+        with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
     try:
@@ -45,13 +50,15 @@ def send_email(to, subject, message_text, at_record_id=None, cc=None, sender=_se
     if not message_text or not to or not subject:
         raise ValueError("Cannot send email without message, to, and subject")
     service = authenticate_google_account()
-    current_date = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    # Get the current date and time
+    current_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
     message = create_message(sender, to, cc, subject, message_text)
     message_sent = send_message(service, 'me', message)
+    message_sent['date'] = current_date
     if at_record_id is not None:
         pass
         # TODO: update airtable if at_record_id is not None
-    return message_sent['id']
+    return message_sent
 
 
 def create_message(sender, to, cc, subject, message_text):
@@ -95,7 +102,7 @@ def list_messages_with_subject(service, user_id, subject):
 def get_message(service, user_id, msg_id):
     try:
         message = service.users().messages().get(userId=user_id, id=msg_id).execute()
-        print(f'Message snippet: {message["snippet"]}')
+        #print(f'Message snippet: {message["snippet"]}')
 
         return message
     except HttpError as error:
@@ -106,15 +113,14 @@ def get_thread(service, user_id, thread_id):
     try:
         thread = service.users().threads().get(userId=user_id, id=thread_id).execute()
         messages = thread['messages']
-        print(f'Thread ID: {thread["id"]}')
-        print(f'Number of messages in this thread: {len(messages)}'
-              f'\n')
-        print(f'Snippet of the last message: {messages[-1]["snippet"]}')
+        #print(f'Thread ID: {thread["id"]}')
+        #print(f'Number of messages in this thread: {len(messages)}')
+        #print(f'Snippet of the last message: {messages[-1]["snippet"]}')
 
         # The original email is the first email in the thread
         original_email = messages[0]
-        print(f'Original email Subject: {original_email["payload"]["headers"]}')
-        print(f'Original email Subject: {original_email["id"]}')
+        #print(f'Original email Subject: {original_email["payload"]["headers"]}')
+        #print(f'Original email Subject: {original_email["id"]}')
         return thread
     except HttpError as error:
         print(f'An error occurred: {error}')
@@ -138,8 +144,9 @@ def check_if_reply(service, user_id, msg_id):
         return False
 
 
-def list_threads_last_24_hours(service, user_id):
+def list_threads_last_24_hours(user_id):
     try:
+        service = authenticate_google_account()
         # Calculate the timestamp for 24 hours ago
         after = datetime.now() - timedelta(hours=24)
         after = int(after.timestamp())
@@ -164,9 +171,35 @@ def list_threads_last_24_hours(service, user_id):
         print(f'An error occurred: {error}')
 
 
+def get_threads_with_replies(user_id="me"):
+
+    service = authenticate_google_account()
+    threads = list_threads_last_24_hours(user_id)
+    threads_replied = []
+    for thread in threads:
+        thread_data = get_thread(service, user_id, thread['id'])
+        messages = thread_data['messages']
+        # print(f'Number of messages in this thread: {len(messages)}')
+        if len(messages) >= 2:
+            found_reply = False
+            for msg in messages:
+                message = get_message(service, user_id, msg['id'])
+                for header in message['payload']['headers']:
+                    if header['name'] == 'In-Reply-To':
+                        # print(f'\n ** This email is a reply to: {header["value"]}\n')
+                        threads_replied.append(thread['id'])
+                        found_reply = True
+                        break
+                        # print(f'\n ** This email is a reply to: {header["value"]}\n')
+                if found_reply:
+                    break
+    print(f'Number of threads replied: {len(threads_replied)}')
+    return threads_replied
+
+
 def main():
     service = authenticate_google_account()
-    current_date = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    current_date = datetime.now().strftime("%Y %H:%M:%S")
     sender = "legal-dispute@resumedone.io"
     to = "eojedapilchik@gmail.com"
     subject = "Test email"
@@ -181,15 +214,7 @@ def main():
     # for msg in messages:
     #     get_message(service, "me", msg['id'])
 
-    threads = list_threads_last_24_hours(service, "me")
-    for thread in threads:
-        thread_data = get_thread(service, "me", thread['id'])
-        messages = thread_data['messages']
-        for msg in messages:
-            message = get_message(service, "me", msg['id'])
-            for header in message['payload']['headers']:
-                if header['name'] == 'In-Reply-To':
-                    print(f'This email is a reply to: {header["value"]}')
+    get_threads_with_replies("me")
 
 
 if __name__ == '__main__':
