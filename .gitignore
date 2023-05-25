@@ -4,3 +4,4 @@ credentials.json
 helpers/token.json
 __pychache__/
 .python-version
+token.json
